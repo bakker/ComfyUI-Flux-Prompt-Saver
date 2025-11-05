@@ -57,11 +57,11 @@ class FluxTextSampler:
             "conditioning": ("CONDITIONING", ),
             "latent_image": ("LATENT", ),
             "seed": ("INT", { "default": 0, "min": 0, "max": 0xffffffffffffffff }),
-            "sampler": (KSampler.SAMPLERS, {
+            "sampler": (comfy.samplers.KSampler.SAMPLERS, {
                 "default": "euler",
                 "multiselect": True
             }),
-            "scheduler": (KSampler.SCHEDULERS, {
+            "scheduler": (comfy.samplers.KSampler.SCHEDULERS, {
                 "default": "simple",
                 "multiselect": True
             }),

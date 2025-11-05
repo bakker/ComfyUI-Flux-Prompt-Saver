@@ -72,13 +72,16 @@ class FluxTextSampler:
             "denoise": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "1.0" }),
         }}
 
-    RETURN_TYPES = ("LATENT","SAMPLER_PARAMS")
-    RETURN_NAMES = ("latent", "params")
+    RETURN_TYPES = ("LATENT","SAMPLER_PARAMS","STRING")
+    RETURN_NAMES = ("latent", "params","model_name")
     FUNCTION = "execute"
     CATEGORY = "sampling"
 
     def execute(self, model, conditioning, latent_image, seed, sampler, scheduler, steps, guidance, max_shift, base_shift, denoise):
         is_schnell = model.model.model_type == comfy.model_base.ModelType.FLOW
+        model_name = getattr(model.model, 'name', None) or getattr(model, 'name', None)
+        if model_name is None and hasattr(model.model, 'model_config'):
+            model_name = model.model.model_config.get("model_name", "UnknownModel")
 
         # Handle seed
         noise = [seed]

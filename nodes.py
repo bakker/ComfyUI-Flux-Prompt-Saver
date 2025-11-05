@@ -57,8 +57,14 @@ class FluxTextSampler:
                     "conditioning": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
                     "seed": ("INT", { "default": 0, "min": 0, "max": 0xffffffffffffffff }),
-                    "sampler": (comfy.samplers.KSampler.SAMPLERS, ),
-                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                    "sampler": (comfy.samplers.KSampler.SAMPLERS, {
+                        "default": "euler",
+                        "multiselect": True
+                    }),
+                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, {
+                        "default": "simple",
+                        "multiselect": True
+                    }),
                     "steps": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "20" }),
                     "guidance": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "3.5" }),
                     "max_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),

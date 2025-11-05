@@ -7,6 +7,9 @@ from PIL.PngImagePlugin import PngInfo
 import folder_paths
 from datetime import datetime
 import comfy.samplers
+
+import comfy.samplers
+import comfy.sample
 import random
 import time
 import logging
@@ -54,8 +57,8 @@ class FluxTextSampler:
                     "conditioning": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
                     "seed": ("INT", { "default": 0, "min": 0, "max": 0xffffffffffffffff }),
-                    "sampler": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "euler" }),
-                    "scheduler": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "simple" }),
+                    "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
                     "steps": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "20" }),
                     "guidance": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "3.5" }),
                     "max_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),

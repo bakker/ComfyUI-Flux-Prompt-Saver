@@ -25,7 +25,7 @@ Custom nodes for ComfyUI to save images with standardized metadata that's compat
 ## Installation
 
 ```bash
-git clone https://github.com/markuryy/ComfyUI-Flux-Prompt-Saver
+git clone https://github.com/bakker/ComfyUI-Flux-Prompt-Saver
 ```
 
 > Note: Also available through ComfyUI Manager

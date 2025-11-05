@@ -53,25 +53,25 @@ class FluxTextSampler:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-                    "model": ("MODEL", ),
-                    "conditioning": ("CONDITIONING", ),
-                    "latent_image": ("LATENT", ),
-                    "seed": ("INT", { "default": 0, "min": 0, "max": 0xffffffffffffffff }),
-                    "sampler": (comfy.samplers.KSampler.SAMPLERS, {
-                        "default": "euler",
-                        "multiselect": True
-                    }),
-                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, {
-                        "default": "simple",
-                        "multiselect": True
-                    }),
-                    "steps": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "20" }),
-                    "guidance": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "3.5" }),
-                    "max_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),
-                    "base_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),
-                    "denoise": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "1.0" }),
-                }}
-    
+            "model": ("MODEL", ),
+            "conditioning": ("CONDITIONING", ),
+            "latent_image": ("LATENT", ),
+            "seed": ("INT", { "default": 0, "min": 0, "max": 0xffffffffffffffff }),
+            "sampler": (KSampler.SAMPLERS, {
+                "default": "euler",
+                "multiselect": True
+            }),
+            "scheduler": (KSampler.SCHEDULERS, {
+                "default": "simple",
+                "multiselect": True
+            }),
+            "steps": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "20" }),
+            "guidance": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "3.5" }),
+            "max_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),
+            "base_shift": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "" }),
+            "denoise": ("STRING", { "multiline": False, "dynamicPrompts": False, "default": "1.0" }),
+        }}
+
     RETURN_TYPES = ("LATENT","SAMPLER_PARAMS")
     RETURN_NAMES = ("latent", "params")
     FUNCTION = "execute"
@@ -83,38 +83,45 @@ class FluxTextSampler:
         # Handle seed
         noise = [seed]
 
-        if sampler == '*':
-            sampler = comfy.samplers.KSampler.SAMPLERS
-        elif sampler.startswith("!"):
-            sampler = sampler.replace("\n", ",").split(",")
-            sampler = [s.strip("! ") for s in sampler]
-            sampler = [s for s in comfy.samplers.KSampler.SAMPLERS if s not in sampler]
+        # --- Handle Sampler Input ---
+        if isinstance(sampler, list):
+            # Comes from multi-select UI
+            sampler = [s for s in sampler if s in KSampler.SAMPLERS]
         else:
-            sampler = sampler.replace("\n", ",").split(",")
-            sampler = [s.strip() for s in sampler if s.strip() in comfy.samplers.KSampler.SAMPLERS]
+            # Old-style string input (manual typing)
+            if sampler == '*':
+                sampler = KSampler.SAMPLERS
+            elif sampler.startswith("!"):
+                sampler = sampler.replace("\n", ",").split(",")
+                sampler = [s.strip("! ") for s in sampler]
+                sampler = [s for s in KSampler.SAMPLERS if s not in sampler]
+            else:
+                sampler = sampler.replace("\n", ",").split(",")
+                sampler = [s.strip() for s in sampler if s.strip() in KSampler.SAMPLERS]
         if not sampler:
             sampler = ['euler']
 
-        if scheduler == '*':
-            scheduler = comfy.samplers.KSampler.SCHEDULERS
-        elif scheduler.startswith("!"):
-            scheduler = scheduler.replace("\n", ",").split(",")
-            scheduler = [s.strip("! ") for s in scheduler]
-            scheduler = [s for s in comfy.samplers.KSampler.SCHEDULERS if s not in scheduler]
+        # --- Handle Scheduler Input ---
+        if isinstance(scheduler, list):
+            scheduler = [s for s in scheduler if s in KSampler.SCHEDULERS]
         else:
-            scheduler = scheduler.replace("\n", ",").split(",")
-            scheduler = [s.strip() for s in scheduler]
-            scheduler = [s for s in scheduler if s in comfy.samplers.KSampler.SCHEDULERS]
+            if scheduler == '*':
+                scheduler = KSampler.SCHEDULERS
+            elif scheduler.startswith("!"):
+                scheduler = scheduler.replace("\n", ",").split(",")
+                scheduler = [s.strip("! ") for s in scheduler]
+                scheduler = [s for s in KSampler.SCHEDULERS if s not in scheduler]
+            else:
+                scheduler = scheduler.replace("\n", ",").split(",")
+                scheduler = [s.strip() for s in scheduler if s in KSampler.SCHEDULERS]
         if not scheduler:
             scheduler = ['simple']
 
+        # --- Parse numeric fields ---
         if steps == "":
-            if is_schnell:
-                steps = "4"
-            else:
-                steps = "20"
+            steps = "4" if is_schnell else "20"
         steps = parse_string_to_list(steps)
-        
+
         denoise = "1.0" if denoise == "" else denoise
         denoise = parse_string_to_list(denoise)
 
@@ -130,7 +137,8 @@ class FluxTextSampler:
 
         max_shift = parse_string_to_list(max_shift)
         base_shift = parse_string_to_list(base_shift)
-               
+
+        # --- Handle conditioning ---
         cond_text = None
         if isinstance(conditioning, dict) and "encoded" in conditioning:
             cond_text = conditioning["text"]
@@ -146,8 +154,9 @@ class FluxTextSampler:
         samplercustomadvanced = SamplerCustomAdvanced()
         latentbatch = LatentBatch()
         modelsamplingflux = ModelSamplingFlux() if not is_schnell else ModelSamplingAuraFlow()
-        width = latent_image["samples"].shape[3]*8
-        height = latent_image["samples"].shape[2]*8
+
+        width = latent_image["samples"].shape[3] * 8
+        height = latent_image["samples"].shape[2] * 8
 
         total_samples = len(cond_encoded) * len(noise) * len(max_shift) * len(base_shift) * len(guidance) * len(sampler) * len(scheduler) * len(steps) * len(denoise)
         current_sample = 0
